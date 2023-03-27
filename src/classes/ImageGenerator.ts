@@ -1,29 +1,5 @@
 import axios, { AxiosResponse } from 'axios'
 
-interface IPrediction {
-    id: string,
-}
-
-interface IImageGenerator {
-    predictions: IPrediction[],
-    token: string,
-    modelId: string,
-    apiUrl: string,
-    check(): Promise<boolean>,
-    runModel(prompt: string): Promise<AxiosResponse>,
-    predictionOutput(predictionId: string, secsForOutput: number): Promise<IPrediction>,
-}
-
-interface IImageData {
-    id: string,
-    url: string,
-}
-
-export interface IModelAccess {
-    token: string,
-    modelId: string
-}
-
 
 export default class ImageGenerator implements IImageGenerator {
 
@@ -56,16 +32,7 @@ export default class ImageGenerator implements IImageGenerator {
         })
     }
 
-    downloadImage(predictionId: string, fileName: string): Promise<any> {
-        throw new Error('Method not implemented.');
-    }
-
-    checkModel() {
-        // check model by making an api request
-
-    }
-
-    runModel(prompt: string): Promise<AxiosResponse> {
+    runModel(prompt: string): Promise<IPrediction> {
         return new Promise(async (resolve, reject) => {
             const data = {
                 'version': this.modelId,
@@ -80,21 +47,30 @@ export default class ImageGenerator implements IImageGenerator {
             }
 
             try {
+                const res = await axios.post(this.apiUrl, data, { headers })
+                let { created_at, id, version } = res.data;
 
-                let res = await axios.post(this.apiUrl, data, { headers })
-                let imageData: IImageData = res.data;
-                if (imageData.id) {
-                    this.predictions.push(imageData);
+                const imageData: IPrediction = {
+                    started_at: Date.now().toString(),
+                    completed_at: '',
+                    id: id,
+                    prompt: prompt,
+                    outputUrl: '',
+                    version: version
                 }
 
-                resolve(res);
+                const prediction = await this.predictionOutput(imageData.id);
+                imageData.outputUrl = prediction;
+                imageData.completed_at = Date.now().toString();
+                this.predictions.push(imageData);
+                resolve(imageData)
             } catch (e) {
                 reject(e);
             }
         })
     }
 
-    async predictionOutput(predictionId: string): Promise<IPrediction> {
+    async predictionOutput(predictionId: string): Promise<string> {
         return new Promise(async (resolve, reject) => {
             const headers = {
                 'Authorization': `Token ${this.token}`,
@@ -106,18 +82,36 @@ export default class ImageGenerator implements IImageGenerator {
                 while (!res.data.output) {
                     res = await axios.get(`${this.apiUrl}/${predictionId}`, { headers })
                 }
-                const prediction = res.data.output as IPrediction;
+                const prediction = res.data.output[0];
                 resolve(prediction);
             } catch (e) {
                 reject(e)
             }
         })
     }
-
-    // downloadImage(predictionId, fileName) {
-    //     const filePath = path.join(process.cwd(), 'assets', 'images', fileName);
-    //     return new Promise(async (resolve, reject) => {
-
-    //     });
-    // }
 }
+
+interface IPrediction {
+    started_at: string,
+    completed_at: string,
+    id: string,
+    prompt: string,
+    outputUrl: string,
+    version: string,
+}
+
+interface IImageGenerator {
+    predictions: IPrediction[],
+    token: string,
+    modelId: string,
+    apiUrl: string,
+    check(): Promise<boolean>,
+    runModel(prompt: string): Promise<IPrediction>,
+    predictionOutput(predictionId: string): Promise<string>,
+}
+
+interface IModelAccess {
+    token: string,
+    modelId: string
+}
+
