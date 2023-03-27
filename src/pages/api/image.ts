@@ -1,36 +1,31 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import fs from 'fs'
-import path from 'path'
+import path from 'path';
 
-type Data = {
-    url?: string
-    error?: any
-}
-
-export default function handler(
-    req: NextApiRequest,
-    res: NextApiResponse<Data>
-) {
-    try {
-
-        const id = req.query.id;
-        const imageName = `replicate-${id}.png`;
-        const imagesFolder = '/public/ia-images';
-        const imagePath = path.join(process.cwd(), imagesFolder, imageName);
-
-        if (!fs.existsSync(imagePath)) {
-            return res.status(404).json({ error: 'Image not found' });
-        }
-
-        // Read the image file and send it back to the client
-        const image = fs.readFileSync(imagePath);
-        res.writeHead(200, {
-            'Content-Type': 'image/png',
-            'Content-Length': image.length,
-        });
-        res.end(image);
-
-    } catch (error) {
-        res.status(500).json({ error: error });
+export default function handler(req: NextApiRequest, res: NextApiResponse) {
+    if(req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+    
+    const { id } = req.query;
+    if (!id || typeof id !== 'string') {
+        res.status(400).json({ error: 'Invalid ID' });
+        return;
     }
+
+    const imagesFolder = '/public/ia-images';
+    const imagePath = path.join(process.cwd(), imagesFolder, `replicate-${id}.png`);
+    if (!fs.existsSync(imagePath)) {
+        res.status(404).json({ error: 'Image not found' });
+        return;
+    }
+
+    const stat = fs.statSync(imagePath);
+    
+    
+    res.writeHead(200, {
+        'content-type': 'image/png',
+        'content-length': stat.size,
+    })
+
+    const readStream = fs.createReadStream(imagePath);
+    readStream.pipe(res);
 }

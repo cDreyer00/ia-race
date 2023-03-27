@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import Prompt from "@/components/prompt";
 
-export default function Submition() {
+export default function Submission() {
     const [imageUrl, setImageUrl] = useState<string>('');
     const [loading, setLoading] = useState(false);
 
@@ -29,12 +29,21 @@ export default function Submition() {
             });
     };
 
+    const handleSearch = () => {
+        const url = 'http://localhost:3000/api/image?id=dl5whw4mwfepdpaybe5ovdevdu'
+        setImageUrl(url);
+    }
+
+
     return (
         <div>
             <h1>Images</h1>
             <Prompt onInputChange={handleInputChange} />
             <button onClick={() => handleSubmit()} >
                 Generate
+            </button>
+            <button onClick={() => handleSearch()} >
+                Search
             </button>
             {loading && <p>Loading...</p>}
             {
