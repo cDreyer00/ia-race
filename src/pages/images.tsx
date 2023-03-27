@@ -1,16 +1,27 @@
 import { useState } from 'react';
+import Prompt from "@/components/prompt";
 
 export default function Images() {
     const [images, setImages] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
 
+    const [inputValue, setInputValue] = useState('');
+
+    const handleInputChange = (value: string) => {
+        setInputValue(value);
+    };
+
     return (
         <div>
             <h1>Images</h1>
+            <Prompt onInputChange={handleInputChange} />
             <button
                 onClick={() => {
                     setLoading(true);
-                    fetch('/api/generate')
+                    // make a body content to use in fetch with inputValue
+                    const body: BodyInit = JSON.stringify({ prompt: inputValue });
+
+                    fetch('/api/generate', { method: 'POST', body: body })
                         .then((res) => {
                             return res.json();
                         })
@@ -24,13 +35,15 @@ export default function Images() {
                 Generate
             </button>
             {loading && <p>Loading...</p>}
-            {images && images.length > 0 && (
-                <div>
-                    {images.map((image) => (
-                        <img key={image} src={image} />
-                    ))}
-                </div>
-            )}
-        </div>
+            {
+                images && images.length > 0 && (
+                    <div>
+                        {images.map((image) => (
+                            <img key={image} src={image} />
+                        ))}
+                    </div>
+                )
+            }
+        </div >
     );
 }

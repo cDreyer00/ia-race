@@ -4,10 +4,9 @@ import ImageGenerator from '../../classes/ImageGenerator'
 
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    // if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
-
-    const prompt = "Rick from RIck And Morty with a gu shooting against aliens on an alien planet, higly detailed and with a lot of detail, Unreal, ArtStation"
-
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
+    // console.log(req)
+    const prompt = JSON.parse(req.body).prompt
     const imageGenerator = new ImageGenerator({
         token: process.env.REPLICATE_TOKEN as string,
         modelId: process.env.MODEL_ID as string
