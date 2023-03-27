@@ -106,10 +106,7 @@ export default class ImageGenerator implements IImageGenerator {
                 while (!res.data.output) {
                     res = await axios.get(`${this.apiUrl}/${predictionId}`, { headers })
                 }
-                console.log(res.data.output)
                 const prediction = res.data.output as IPrediction;
-                console.log("======= prediction ===========")
-                console.log(prediction)
                 resolve(prediction);
             } catch (e) {
                 reject(e)
