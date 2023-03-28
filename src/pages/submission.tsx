@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Prompt from "@/components/prompt";
+import style from '@/styles/submission.module.css'
 
 export default function Submission() {
     const [imageUrl, setImageUrl] = useState<string>('');
@@ -16,13 +17,8 @@ export default function Submission() {
         const body: BodyInit = JSON.stringify({ prompt: inputValue });
         fetch('/api/generate', { method: 'POST', body: body })
             .then((res) => res.json())
-            .then(({ name }) => fetch(`/api/image?id=${name}`))
-            .then((res) => res.json())
-            .then(({ url }) => {
-                console.log("\nurl =>")
-                console.log(url)
-                setImageUrl(url);
-                setLoading(false)
+            .then(({ output }) => {
+                setImageUrl(output);
             })
             .catch((err) => {
                 setLoading(false);
@@ -34,10 +30,9 @@ export default function Submission() {
         setImageUrl(url);
     }
 
-
     return (
         <div>
-            <h1>Images</h1>
+            <h1 className={style.title}>Images</h1>
             <Prompt onInputChange={handleInputChange} />
             <button onClick={() => handleSubmit()} >
                 Generate

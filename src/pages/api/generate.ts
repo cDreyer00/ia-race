@@ -4,8 +4,13 @@ import ImageGenerator from '../../classes/ImageGenerator'
 import fs from 'fs'
 import axios from 'axios'
 
+import dotenv from 'dotenv'
+dotenv.config();
+
+const apiBaseUrl = process.env.API_BASE_URL as string;
+
 type data = {
-    name?: string,
+    output?: string,
     error?: any
 }
 
@@ -25,7 +30,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         const imgBinary = await axios.get(outputUrl, { responseType: 'arraybuffer' })
         await fs.promises.writeFile(`${imagesPath}/${imageName}`, imgBinary.data)
 
-        res.status(200).json({ name: imageName })
+        const output = `${apiBaseUrl}/image?id=${id}`;
+        res.status(200).json({ output: output })
     } catch (e) {
         res.status(500).json({ error: e })
     }
